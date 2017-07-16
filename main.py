@@ -116,7 +116,7 @@ def update_position(intent, session):
             ReturnValues="UPDATED_NEW"
         )
 
-        speech_output = "You are currently in the pattern at " + \
+        speech_output = "At " + \
                         current_aircraft.position + ". "
         reprompt_text = "You can ask me about other traffic by saying, " \
                         "what aircraft are in the area?"
