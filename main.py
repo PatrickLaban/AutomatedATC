@@ -61,10 +61,6 @@ def handle_session_end_request():
         card_title, speech_output, None, should_end_session))
 
 
-def create_current_position_attributes(current_position):
-    return {"position": current_position, "aircraft": "Cessna One One Tree Golf X-ray"}
-
-
 class Aircraft:
     def __init__(self, call_sign, make, position=None):
         self.call_sign = call_sign
@@ -150,6 +146,10 @@ def get_traffic(intent, session):
                 current_aircraft = Aircraft(aircraft['CallSign'], aircraft['make'], aircraft['pattern_position'])
                 speech_output += current_aircraft.make + current_aircraft.call_sign + \
                                  "is in the pattern at " + current_aircraft.position + ".. "
+            else:
+                current_aircraft = Aircraft(aircraft['CallSign'], aircraft['make'], aircraft['pattern_position'])
+                speech_output += current_aircraft.make + current_aircraft.call_sign + \
+                                 "is in the area.. "
     else:
         speech_output = "There are no other aircraft in the pattern."
     should_end_session = False
@@ -159,12 +159,12 @@ def get_traffic(intent, session):
 
 
 def check_clearance(pattern_request):
-    clearance_dict = {"runway": {"final", "landing", "base"},
-                      "final": {"landing", "base", "runway"},
-                      "landing": {"runway", "takeoff"},
-                      "takeoff": {"crosswind"},
-                      "downwind": {"base"},
-                      "base": {"final", "landing", "runway", "takeoff"},
+    clearance_dict = {"runway": {"final", "landing", "base", "runway"},
+                      "final": {"landing", "base", "runway", "final"},
+                      "landing": {"runway", "take-off", "landing"},
+                      "take-off": {"crosswind", "take-off"},
+                      "downwind": {"base", "downwind"},
+                      "base": {"final", "landing", "runway", "take-off", "base"},
                       }
     negative_clearance_list = clearance_dict[pattern_request]
     ddb = boto3.resource('dynamodb').Table('Aircraft')
@@ -184,7 +184,7 @@ def get_clearance(intent, session):
     pattern_request = intent['slots']['Position']['value']
     if check_clearance(pattern_request):
         speech_output = current_aircraft.make + " " + current_aircraft.call_sign + \
-            " is cleared to " + pattern_request + " in the pattern. "
+            pattern_request + " clearance granted. "
     else:
         speech_output = current_aircraft.make + " " + current_aircraft.call_sign + \
                         "  " + pattern_request + " clearance denied. "
